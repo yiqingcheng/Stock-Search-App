@@ -1,0 +1,976 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+   <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script>
+        function loadHistorical(symbol){
+             var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=detail&symbol=" + symbol;
+              console.log(1);
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");     
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var data= JSON.parse(xmlhttp.responseText);
+                      var data1 = data["Meta Data"];
+            var symbol = data1["2. Symbol"];
+            var data2 = data["Time Series (Daily)"];
+            var keys = Object.keys(data2);
+            var values = Object.values(data2);
+           
+            var arr = new Array();
+             if(values.length <= 1001){
+                for (var i = 0;i < values.length; i ++){
+                    var value = Number(values[i]["4. close"]);
+                        arr.push(value);
+                 }
+             }else{
+            for (var i = 0; i <=1001; i ++){
+                 var value = Number(values[i]["4. close"]);
+                        arr.push(value);
+             }
+             }
+            
+            var arrtime = new Array();
+            if(keys.length <= 1001){
+                for (var i = 0;i < keys.length; i ++){
+                    var time = Date.parse(keys[i]);
+                        arrtime.push(time);
+                 }
+             }else{
+            for (var i = 0;i <=1001; i ++){
+                var time = Date.parse(keys[i]);
+                        arrtime.push(time);
+             }
+             }
+           
+            var result = new Array();
+           for(var i = 0; i < arrtime.length; i ++){
+               var subarr = new Array();
+               subarr.push(arrtime[i]);
+               subarr.push(arr[i]);
+               result.push(subarr);
+           }
+            result.reverse();
+
+            
+                Highcharts.stockChart('historical', {
+                title: {
+                    text: symbol + ' Stock Value'
+                },
+                subtitle: {
+                    useHTML: true,
+                            text: '<a href="https://www.alphavantage.co/" target="_blank" style = "text-decoration: none; :active: color: black;">Source: Alpha Vantage</a>',
+                            style:{
+                                    color:'#4B6BF6'
+                                }
+                },
+
+                xAxis: { 
+                   type:'datetime'
+                },
+               yAxis: {
+                        title: {
+                            text: 'Stock Value'
+                            }
+                        },
+
+                rangeSelector: {
+                    buttons: [
+                        {
+                        type: 'week',
+                        count: 1,
+                        text: '1w'
+                    },
+                        {
+                        type: 'month',
+                        count: 1,
+                        text: '1m'
+                    },
+                        {
+                        type: 'month',
+                        count: 3,
+                        text: '3m'
+                    },
+                        {
+                        type: 'month',
+                        count: 6,
+                        text: '6m'
+                    },
+                        {
+                        type: 'ytd',
+                        text: 'YTD'
+                    }, {
+                        type: 'year',
+                        count: 1,
+                        text: '1y'
+                    }, {
+                        type: 'all',
+                        text: 'All'
+                    }]
+                },
+
+                series: [{
+                    name: 'AAPL',
+                    type: 'area',
+                    data: result
+
+                }]
+            });
+                  }
+                }
+      }
+       function loadSMA(symbol){
+           var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=SMA";
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+
+                      var data = jsonObj["Technical Analysis: SMA"];
+                      var timeArrays = new Array();
+                      var SMAData = new Array();
+                      var arraykey = Object.keys(data);
+                      var arrayvalue = Object.values(data);
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           SMAData[i] = parseFloat(arrayvalue[i]["SMA"]);
+                       }
+                      SMAData.reverse();
+
+
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Simple Moving Average(SMA)'
+                        },
+
+                    subtitle: {
+                        text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                        style:{
+                            color:'#4B6BF6'
+                        }
+                    },
+
+                    xAxis: {
+                          categories: timeArrays,
+                        tickInterval: 5
+                        },
+                    yAxis: {
+                        title: {
+                            text: 'SMA'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            color: '#D7391F'
+                                }
+                    },
+                    series: [{
+                        name: symbol,
+                        data:  SMAData
+                        }]
+                    });
+                  }
+                }
+        }
+         function loadEMA(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=EMA";
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+
+
+
+                      var EMAdata = jsonObj["Technical Analysis: EMA"];
+                      var timeArrays = new Array();
+                      var EMAy = new Array();
+                      var arraykey = Object.keys(EMAdata);
+                      var EMAarrayvalue = Object.values(EMAdata);
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+                      for (i= 0; i < 121;i ++){
+                           EMAy[i] = parseFloat(EMAarrayvalue[i]["EMA"]);
+                       }
+                      EMAy.reverse();
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Exponential Moving Average (EMA)'
+                        },
+
+                    subtitle: {
+                    text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                        style:{
+                        color:'#4B6BF6'
+                    }
+                    },
+
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'EMA'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+//                                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            color: '#D7391F'
+                                }
+                    },
+                    series: [{
+                        name: symbol,
+                        data:  EMAy
+                        }]
+                    });
+                  }
+                }
+}
+ function loadSTOCH(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=STOCH";
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+                      var stodata = jsonObj["Technical Analysis: STOCH"];
+                      var timeArrays = new Array();
+                      var stoData1 = new Array();
+                      var stoData2 = new Array();
+                      var arraykey = Object.keys(stodata);
+                      var stoarrayvalue = Object.values(stodata);
+                       for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData1[i] = parseFloat(stoarrayvalue[i]["SlowD"]);
+                       }
+                      stoData1.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData2[i] = parseFloat(stoarrayvalue[i]["SlowK"]);
+                       }
+                      stoData2.reverse();
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Stochastic Oscillator(STOCH)'
+                        },
+
+                    subtitle: {
+                                text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                        style:{
+                        color:'#4B6BF6'
+                        }
+                        },
+
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'STOCH'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+//                                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1
+
+                                }
+                    },
+                    series: [{
+                        name: symbol + ' SlowD',
+                        color: '#D7391F',
+                        data:  stoData1
+                        },{
+                     name: symbol + ' SlowK',
+                      data: stoData2
+                     }]
+                    });
+                  }
+                }
+    }
+    function loadRSI(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=RSI";
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+
+
+                      var cdata = jsonObj["Technical Analysis: RSI"];
+                      var timeArrays = new Array();
+                      var cSMAData = new Array();
+                      var arraykey = Object.keys(cdata);
+                      var carrayvalue = Object.values(cdata);
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+                      for (i= 0; i < 121 ;i ++){
+                           cSMAData[i] = parseFloat(carrayvalue[i]["RSI"]);
+                       }
+                      cSMAData.reverse();
+                     // console.log(SMAData);
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Relative Strength Index (RSI)'
+                        },
+
+                    subtitle: {
+                            text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                            style:{
+                            color:'#4B6BF6'
+                            }
+                    },
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'RSI'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            color: '#D7391F'
+                                }
+                    },
+                    series: [{
+                        name: symbol,
+                        data:  cSMAData
+                        }]
+                    });
+                  }
+                }
+
+    }
+    function loadADX(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=ADX";
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+
+                      var cdata = jsonObj["Technical Analysis: ADX"];
+                      var timeArrays = new Array();
+                      var cSMAData = new Array();
+                      var arraykey = Object.keys(cdata);
+                      var carrayvalue = Object.values(cdata);
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+
+                      for (i= 0; i < 121 ;i ++){
+                           cSMAData[i] = parseFloat(carrayvalue[i]["ADX"]);
+                       }
+                      cSMAData.reverse();
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Average Directional Movement Index (ADX)'
+                        },
+                    subtitle: {
+                            text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                            style:{
+                                    color:'#4B6BF6'
+                                }
+                        },
+
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'ADX'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+//                                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            color: '#D7391F'
+                                }
+                    },
+                    series: [{
+                        name: symbol,
+                        data:  cSMAData
+                        }]
+                    });
+                  }
+                }
+
+    }
+    function loadCCI(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=CCI";
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+
+                      var cdata = jsonObj["Technical Analysis: CCI"];
+                      var timeArrays = new Array();
+                      var cSMAData = new Array();
+                      var arraykey = Object.keys(cdata);
+                      var carrayvalue = Object.values(cdata);
+
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           cSMAData[i] = parseFloat(carrayvalue[i]["CCI"]);
+                       }
+                      cSMAData.reverse();
+                     // console.log(SMAData);
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Commodity Channel Index (CCI)'
+                        },
+
+                   subtitle: {
+                        text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                        style:{
+                        color:'#4B6BF6'
+                        }
+                        },
+
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'CCI'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+//                                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1,
+                            color: '#D7391F'
+                                }
+                    },
+                    series: [{
+                        name: symbol,
+                        data:  cSMAData
+                        }]
+                    });
+                  }
+                }
+
+    }
+    function loadBBANDS(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=BBANDS";
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+                      var stodata = jsonObj["Technical Analysis: BBANDS"];
+                      var timeArrays = new Array();
+                      var stoData1 = new Array();
+                      var stoData2 = new Array();
+                      var stoData3 = new Array();
+                      var arraykey = Object.keys(stodata);
+                      var stoarrayvalue = Object.values(stodata);
+
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData1[i] = parseFloat(stoarrayvalue[i]["Real Middle Band"]);
+                       }
+                      stoData1.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData2[i] = parseFloat(stoarrayvalue[i]["Real Upper Band"]);
+                       }
+                      stoData2.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData3[i] = parseFloat(stoarrayvalue[i]["Real Lower Band"]);
+                       }
+                      stoData3.reverse();
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Bollinger Bands (BBANDS)'
+                        },
+
+                    subtitle: {
+                            text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                            style:{
+                                    color:'#4B6BF6'
+                                }
+                        },
+
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'BBANDS'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1
+
+                                }
+                    },
+                    series: [{
+                        name: symbol + ' Real Middle Band',
+                        color: '#D7391F',
+                        data:  stoData1
+                        },{
+                     name: symbol + ' Real Middle Band',
+                            color: '#000000',
+                      data: stoData2
+                     },
+                    {
+                     name: symbol + ' Real Middle Band',
+                        color: '#9ED08B',
+                      data: stoData3
+                     }]
+                    });
+                  }
+                }
+    }
+    function loadMACD(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=indicator&symbol=" + symbol +"&type=MACD";
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+                xmlhttp.onreadystatechange = function() {
+                  if (this.readyState == 4 && this.status == 200){
+                    var jsonObj= JSON.parse(xmlhttp.responseText);
+                      var stodata = jsonObj["Technical Analysis: MACD"];
+                      var timeArrays = new Array();
+                      var stoData1 = new Array();
+                      var stoData2 = new Array();
+                      var stoData3 = new Array();
+                      var arraykey = Object.keys(stodata);
+                      var stoarrayvalue = Object.values(stodata);
+
+                      for(var i = 0; i < 121; i ++){
+                          var myarr = arraykey[i].split("-");
+                          timeArrays[i] = myarr[1] + "/" + myarr[2];
+                      }
+                      timeArrays.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData1[i] = parseFloat(stoarrayvalue[i]["MACD_Signal"]);
+                       }
+                      stoData1.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData2[i] = parseFloat(stoarrayvalue[i]["MACD_Hist"]);
+                       }
+                      stoData2.reverse();
+
+                      for (i= 0; i < 121 ;i ++){
+                           stoData3[i] = parseFloat(stoarrayvalue[i]["MACD"]);
+                       }
+                      stoData3.reverse();
+
+                     Highcharts.chart('historical', {
+
+                    title: {
+                        text: 'Moving Average Convergence/Divergence (MACD)'
+                        },
+
+                    subtitle: {
+                            text: 'Source: <a href="https://www.alphavantage.co/"> Alpha Vantage</a>',
+                            style:{
+                                    color:'#4B6BF6'
+                                }
+                        },
+
+                    xAxis: {
+                            categories: timeArrays,
+                        tickInterval: 5
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'MACD'
+                            }
+                        },
+                         legend: {
+                                layout: 'vertical',
+                                align: 'right',
+                                verticalAlign: 'middle',
+                                floating: false,
+                                },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                radius: 2
+                            },
+                            lineWidth: 1
+
+                                }
+                    },
+                    series: [
+                        {
+                     name: symbol + ' MACD',
+                        color: '#D7391F',
+                      data: stoData3
+                     },{
+                     name: symbol + ' MACD_Hist',
+                            color: '#DDA874',
+                      data: stoData2
+                     },
+                      {
+                        name: symbol+ ' MACD_Signal',
+                        color: '#888BC3',
+                        data:  stoData1
+                        }]
+                    });
+                  }
+                }
+    }
+      function loadPrice(symbol){
+                var url = "http://evejs-env.us-west-2.elasticbeanstalk.com/?methodName=detail&symbol=" + symbol;
+
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }else {
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                    xmlhttp.open("GET",url,true);
+                    xmlhttp.send();
+
+         xmlhttp.onreadystatechange = function() {
+           if (this.readyState == 4 && this.status == 200){
+                    var data= JSON.parse(xmlhttp.responseText);
+
+              var data1 = data["Time Series (Daily)"];
+             var dataValue = Object.values(data1);
+             var lastPrice = dataValue[0]["4. close"];
+             var lastlastprice = dataValue[1]["4. close"];
+             var change = Number((lastPrice - lastlastprice).toFixed(2));
+             var changepercent  = Number((change / lastlastprice * 100).toFixed(2));
+             var price = Number(Number(lastPrice).toFixed(2));
+
+             var low = Number(dataValue[0]["3. low"]).toFixed(2);
+             var high = Number(dataValue[0]["2. high"]).toFixed(2);
+             var vol = Number(dataValue[0]["5. volume"]);
+
+             var open = Number(dataValue[0]["1. open"]).toFixed(2);
+
+             var time = data["Meta Data"]["3. Last Refreshed"];
+             var closeTime = time + " 16:00:00 EDT";
+
+             var dataKey = Object.keys(data1);
+            var current = dataKey[0].split("-");
+             var currenttime = current[1] + "/" + current[2] +"/" + current[0];
+
+                var keys = new Array();
+             for(var i = 0; i < 121; i ++){
+                var myarr = dataKey[i].split("-");
+                keys[i] = myarr[1] + "/" + myarr[2];
+             }
+                keys.reverse();
+
+             var dataClose = new Array();
+             for(var i = 0; i <= 121; i ++){
+                dataClose.push(dataValue[i]["4. close"]);
+             }
+                dataClose.reverse();
+                var dataClose = dataClose.map(str => parseFloat(str));
+                 var min1 = Math.min.apply(null, dataClose);
+                var max1 = Math.max.apply(null, dataClose);
+
+              var dataVolume = new Array();
+             for(var i = 0; i <= 121; i ++){
+                dataVolume.push(dataValue[i]["5. volume"]);
+             }
+                dataVolume.reverse();
+
+                for(var i = 0; i < dataVolume.length; i ++){
+                    dataVolume[i] = dataVolume[i] / 1000000;
+                }
+                var dataVolume = dataVolume.map(string => parseFloat(string));
+
+
+
+            //price
+            var fbArray = new Array;
+            var fbArray = {
+                        chart: {
+                            zoomType: 'x'
+                            },
+
+                        title: {
+                                text: symbol + ' Stock Price and Volume'
+                        },
+                        subtitle: {
+                            useHTML: true,
+                                text: '<a href="https://www.alphavantage.co/" target="_blank"  style = "text-decoration: none;">Source: Alpha Vantage</a>'
+                        },
+
+                        xAxis: [{
+                                categories: keys,
+                                tickInterval: 5
+                        }],
+
+                        yAxis: [{
+                            max: max1,
+                    //tickInterval: 5,
+                        labels: {
+                            format: '{value}',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                                }
+                        },
+                        title: {
+                            text: 'Stock Price',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        }
+                    }, {
+                        min: 0,
+                        tickInterval: 50,
+                        title: {
+                            text: 'Volume',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        },
+                        labels: {
+                            format: '{value} M',
+                            style: {
+                                color: Highcharts.getOptions().colors[1]
+                            }
+                        },
+                        opposite: true
+                    }],
+                    plotOptions: {
+
+                    area: {
+                            color: '#E6E6FD',
+                           fillOpacity: 0.5,
+                            marker: {
+                                radius: 0
+                                },
+                            lineWidth: 1,
+                            lineColor:'#3345F5',
+                            states: {
+                            hover: {
+                                 enabled: true
+
+                                }
+
+                            },
+                            threshold: null
+                            },
+                    column:{
+                        color: '#DF6B61'
+                        }
+                    },
+
+                    series: [{
+                        name: symbol,
+                        type: 'area',
+                        data: dataClose
+
+                    },
+                    {
+                        name: symbol + ' Volume',
+                        type: 'column',
+                        yAxis: 1,
+                        data: dataVolume
+
+                    }]
+                };
+             Highcharts.chart('price', fbArray);
+                  }
+                }
+          }
+
+
+    </script>
+</head>
+    
+<body>
+    <div id = "historical"></div>
+    <div id = "price"></div>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Stock Market</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="default_shared_preferences_key">default</string>
+    <string name="favorites_key">favorites</string>
+    <string name="action_add_to_favorites">Favorite</string>
+</resources>
