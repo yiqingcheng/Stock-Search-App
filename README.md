@@ -29,3 +29,14 @@ News
 Sharing to Facebook 
 
 <img width="299" alt="7" src="https://user-images.githubusercontent.com/29028455/41132222-b2f71e8c-6a74-11e8-9c10-4d079b0d700e.png">
+
+
+# Main Function 
+1. AutoComplete : The user can enter the stock name or symbol in the text view to get the stock information from our PHP script. Based on the user input, the AutoComplete would display the all the matching companies and symbols by making a HTTP request. 
+
+2. Favorite List: 
+The Favorites list interface consists of the following:
+• An Automatic Refresh switch, labeled AutoRefresh
+• A Refresh button
+• Two “Spinners” controlling the order of the list
+• The Favorite “Custom ListView” showing a list of favorite stocks
